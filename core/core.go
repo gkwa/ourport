@@ -1,13 +1,13 @@
 package core
 
 import (
-	"github.com/go-logr/logr"
-
 	"context"
 	"database/sql"
-	_ "embed"
 	"log"
-	"reflect"
+
+	"github.com/go-logr/logr"
+
+	_ "embed"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -20,7 +20,7 @@ func Hello(logger logr.Logger) {
 	logger.V(1).Info("Debug: Exiting Hello function")
 }
 
-//go:embed schema.sql
+//go:embed ../schema.sql
 var ddl string
 
 func run() error {
