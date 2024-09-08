@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"github.com/go-logr/logr"
 
@@ -20,10 +19,10 @@ func Hello(logger logr.Logger) {
 	logger.V(1).Info("Debug: Exiting Hello function")
 }
 
-//go:embed ../schema.sql
+//go:embed schema.sql
 var ddl string
 
-func run() error {
+func Run() error {
 	ctx := context.Background()
 
 	db, err := sql.Open("sqlite3", "links.sqlite")
@@ -44,10 +43,4 @@ func run() error {
 		return err
 	}
 	return nil
-}
-
-func main() {
-	if err := run(); err != nil {
-		log.Fatal(err)
-	}
 }
