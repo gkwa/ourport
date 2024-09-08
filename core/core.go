@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"database/sql"
+	"path/filepath"
 
 	"github.com/go-logr/logr"
 
@@ -30,17 +31,22 @@ func Run() error {
 		return err
 	}
 
-	// create tables
 	if _, err := db.ExecContext(ctx, ddl); err != nil {
 		return err
 	}
 
 	queries := tutorial.New(db)
 
-	// list all authors
-	links, err := queries.GetLinks(ctx)
+	links, err := queries.GetImageLinks(ctx)
 	if err != nil {
 		return err
 	}
+
+	groups := make(map[string][]string)
+	for _, link := range links {
+		parentDir := filepath.Dir(link.Url)
+		groups[parentDir] = append(groups[parentDir], link.Url)
+	}
+
 	return nil
 }

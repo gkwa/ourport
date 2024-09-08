@@ -12,7 +12,9 @@ var helloCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := LoggerFrom(cmd.Context())
 		logger.Info("Running hello command")
-		core.Run()
+		if err := core.Run(); err != nil {
+			logger.Error(err, "Failed to run core")
+		}
 	},
 }
 
