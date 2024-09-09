@@ -16,7 +16,6 @@ WHERE  LOWER(url) NOT LIKE '%thumb%'
  AND  (
    LOWER(url) LIKE '%.jpg'
    OR LOWER(url) LIKE '%.jpeg'
-   OR LOWER(url) LIKE '%.gif'
  )
 GROUP  BY url
 ORDER  BY first_seen;
