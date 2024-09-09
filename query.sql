@@ -8,11 +8,16 @@ ORDER  BY first_seen;
 
 -- name: GetImageLinks :many
 SELECT DISTINCT url,
-                title,
-                MIN(created_at) AS first_seen
+               title,
+               MIN(created_at) AS first_seen
 FROM   links
-WHERE  url NOT LIKE '%thumb%'
-  AND  url NOT LIKE '%th-%'
+WHERE  LOWER(url) NOT LIKE '%thumb%'
+ AND   LOWER(url) NOT LIKE '%th-%'
+ AND  (
+   LOWER(url) LIKE '%.jpg'
+   OR LOWER(url) LIKE '%.jpeg'
+   OR LOWER(url) LIKE '%.gif'
+ )
 GROUP  BY url
 ORDER  BY first_seen;
 

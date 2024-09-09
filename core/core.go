@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"path/filepath"
 
 	"github.com/go-logr/logr"
@@ -47,6 +48,9 @@ func Run() error {
 		parentDir := filepath.Dir(link.Url)
 		groups[parentDir] = append(groups[parentDir], link.Url)
 	}
+
+	fmt.Printf("Number of groups: %d\n", len(groups))
+	fmt.Printf("Total number of links: %d\n", len(links))
 
 	return nil
 }
