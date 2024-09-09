@@ -3,8 +3,9 @@ package core
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"path/filepath"
+	"path"
+	"strconv"
+	"strings"
 
 	_ "embed"
 
@@ -16,43 +17,29 @@ import (
 //go:embed schema.sql
 var ddl string
 
-func Run() error {
-	// Existing Run function code...
-	return nil
-}
-
-func Report1() error {
+func FetchImageLinks() ([]tutorial.GetImageLinksRow, error) {
 	ctx := context.Background()
 
 	db, err := sql.Open("sqlite3", "links.sqlite")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer db.Close()
 
-	queries := tutorial.New(db)
-
-	links, err := fetchImageLinks(ctx, queries)
-	if err != nil {
-		return err
+	if _, err := db.ExecContext(ctx, ddl); err != nil {
+		return nil, err
 	}
 
-	generateReport1(links)
-
-	return nil
-}
-
-func fetchImageLinks(ctx context.Context, queries *tutorial.Queries) ([]tutorial.GetImageLinksRow, error) {
+	queries := tutorial.New(db)
 	return queries.GetImageLinks(ctx)
 }
 
-func generateReport1(links []tutorial.GetImageLinksRow) {
-	groups := make(map[string][]string)
-	for _, link := range links {
-		parentDir := filepath.Dir(link.Url)
-		groups[parentDir] = append(groups[parentDir], link.Url)
+func extractNumber(url string) int {
+	base := path.Base(url)
+	numStr := strings.TrimSuffix(base, path.Ext(base))
+	num, err := strconv.Atoi(numStr)
+	if err != nil {
+		return 0
 	}
-
-	fmt.Printf("Number of groups: %d\n", len(groups))
-	fmt.Printf("Total number of links: %d\n", len(links))
+	return num
 }

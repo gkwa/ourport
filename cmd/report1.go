@@ -12,7 +12,7 @@ var report1Cmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := LoggerFrom(cmd.Context())
 		logger.Info("Running report1 command")
-		if err := core.Report1(); err != nil {
+		if err := core.RunReport1(); err != nil {
 			logger.Error(err, "Failed to generate report1")
 		}
 	},

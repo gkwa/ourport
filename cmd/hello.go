@@ -12,9 +12,12 @@ var helloCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := LoggerFrom(cmd.Context())
 		logger.Info("Running hello command")
-		if err := core.Run(); err != nil {
-			logger.Error(err, "Failed to run core")
+		links, err := core.FetchImageLinks()
+		if err != nil {
+			logger.Error(err, "Failed to fetch image links")
+			return
 		}
+		core.Report1(links)
 	},
 }
 
