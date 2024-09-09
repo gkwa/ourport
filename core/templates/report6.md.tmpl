@@ -1,0 +1,8 @@
+{{ range .Groups }}
+# {{ .Name }} ({{ .Count }} images)
+
+{{ range .URLs }}
+![]({{ . }})
+{{ end }}
+
+{{ end }}
