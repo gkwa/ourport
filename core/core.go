@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/go-logr/logr"
-
 	_ "embed"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -15,34 +13,40 @@ import (
 	"github.com/gkwa/ourport/tutorial"
 )
 
-func Hello(logger logr.Logger) {
-	logger.V(1).Info("Debug: Entering Hello function")
-	logger.Info("Hello, World!")
-	logger.V(1).Info("Debug: Exiting Hello function")
-}
-
 //go:embed schema.sql
 var ddl string
 
 func Run() error {
+	// Existing Run function code...
+	return nil
+}
+
+func Report1() error {
 	ctx := context.Background()
 
 	db, err := sql.Open("sqlite3", "links.sqlite")
 	if err != nil {
 		return err
 	}
-
-	if _, err := db.ExecContext(ctx, ddl); err != nil {
-		return err
-	}
+	defer db.Close()
 
 	queries := tutorial.New(db)
 
-	links, err := queries.GetImageLinks(ctx)
+	links, err := fetchImageLinks(ctx, queries)
 	if err != nil {
 		return err
 	}
 
+	generateReport1(links)
+
+	return nil
+}
+
+func fetchImageLinks(ctx context.Context, queries *tutorial.Queries) ([]tutorial.GetImageLinksRow, error) {
+	return queries.GetImageLinks(ctx)
+}
+
+func generateReport1(links []tutorial.GetImageLinksRow) {
 	groups := make(map[string][]string)
 	for _, link := range links {
 		parentDir := filepath.Dir(link.Url)
@@ -51,6 +55,4 @@ func Run() error {
 
 	fmt.Printf("Number of groups: %d\n", len(groups))
 	fmt.Printf("Total number of links: %d\n", len(links))
-
-	return nil
 }
