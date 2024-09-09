@@ -37,7 +37,7 @@ func RunReport6(groupsPerPage int) error {
 
 	var groupList []GroupInfo
 	for name, urls := range groups {
-		if len(urls) > 1 {
+		if len(urls) > 4 {
 			sort.Slice(urls, func(i, j int) bool {
 				return extractNumber(urls[i]) < extractNumber(urls[j])
 			})
