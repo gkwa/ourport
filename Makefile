@@ -35,6 +35,7 @@ check: .timestamps/.check.time
 build: $(BIN)
 
 $(BIN): .timestamps/.build.time .timestamps/.tidy.time
+	sqlc generate
 	go build -ldflags "$(LDFLAGS)" -o $@
 
 .timestamps/.build.time: $(SRC)

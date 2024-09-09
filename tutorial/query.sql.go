@@ -54,7 +54,6 @@ WHERE  LOWER(url) NOT LIKE '%thumb%'
    LOWER(url) LIKE '%.jpg'
    OR LOWER(url) LIKE '%.jpeg'
    OR LOWER(url) LIKE '%.gif'
-   OR LOWER(url) LIKE '%.png'
  )
 GROUP  BY url
 ORDER  BY first_seen
