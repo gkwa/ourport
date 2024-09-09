@@ -38,6 +38,9 @@ func RunReport6(groupsPerPage int) error {
 	var groupList []GroupInfo
 	for name, urls := range groups {
 		if len(urls) > 1 {
+			sort.Slice(urls, func(i, j int) bool {
+				return extractNumber(urls[i]) < extractNumber(urls[j])
+			})
 			groupList = append(groupList, GroupInfo{Name: name, Count: len(urls), URLs: urls})
 		}
 	}
@@ -51,18 +54,25 @@ func RunReport6(groupsPerPage int) error {
 		return fmt.Errorf("failed to read template: %w", err)
 	}
 
-	tmpl, err := template.New("page").Parse(string(tmplContent))
+	funcMap := template.FuncMap{
+		"add": func(a, b, c int) int {
+			return a + b + c
+		},
+	}
+
+	tmpl, err := template.New("page").Funcs(funcMap).Parse(string(tmplContent))
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %w", err)
 	}
 
-	for i := 0; i < len(groupList); i += groupsPerPage {
+	totalGroups := len(groupList)
+	for i := 0; i < totalGroups; i += groupsPerPage {
 		end := i + groupsPerPage
-		if end > len(groupList) {
-			end = len(groupList)
+		if end > totalGroups {
+			end = totalGroups
 		}
 
-		fileName := fmt.Sprintf("ourport-images-%03d.md", i/groupsPerPage+1)
+		fileName := fmt.Sprintf("ourport-images-%02d-%03d.md", groupsPerPage, i/groupsPerPage+1)
 		file, err := os.Create(fileName)
 		if err != nil {
 			return err
@@ -70,9 +80,15 @@ func RunReport6(groupsPerPage int) error {
 		defer file.Close()
 
 		err = tmpl.Execute(file, struct {
-			Groups []GroupInfo
+			Groups        []GroupInfo
+			GroupsInFile  int
+			TotalGroups   int
+			StartingIndex int
 		}{
-			Groups: groupList[i:end],
+			Groups:        groupList[i:end],
+			GroupsInFile:  end - i,
+			TotalGroups:   totalGroups,
+			StartingIndex: i,
 		})
 		if err != nil {
 			return err
