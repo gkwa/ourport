@@ -62,7 +62,7 @@ func RunReport6(groupsPerPage int) error {
 			end = len(groupList)
 		}
 
-		fileName := fmt.Sprintf("report6_page%d.md", i/groupsPerPage+1)
+		fileName := fmt.Sprintf("ourport-images-%03d.md", i/groupsPerPage+1)
 		file, err := os.Create(fileName)
 		if err != nil {
 			return err
