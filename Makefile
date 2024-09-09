@@ -2,6 +2,7 @@ BIN := ourport
 PREFIX := github.com/gkwa/ourport/version
 
 SRC := $(shell find . -name '*.go')
+SQL_FILES := $(shell find . -name '*.sql')
 
 DATE := $(shell date +"%Y-%m-%dT%H:%M:%SZ")
 GOVERSION := $(shell go version)
@@ -35,12 +36,21 @@ check: .timestamps/.check.time
 build: $(BIN)
 
 $(BIN): .timestamps/.build.time .timestamps/.tidy.time
-	sqlc generate
 	go build -ldflags "$(LDFLAGS)" -o $@
 
-.timestamps/.build.time: $(SRC)
+.timestamps/.build.time: $(SRC) tutorial/*.go
 	@mkdir -p .timestamps
 	@touch $@
+
+.PHONY: sqlc # run sqlc generate
+sqlc: .timestamps/.sqlc.time
+
+.timestamps/.sqlc.time: $(SQL_FILES) sqlc.yaml
+	sqlc generate
+	@mkdir -p .timestamps
+	@touch $@
+
+tutorial/*.go: .timestamps/.sqlc.time
 
 .PHONY: goreleaser # run goreleaser
 goreleaser: goreleaser --clean
