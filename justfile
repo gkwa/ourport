@@ -17,7 +17,7 @@ generate-all:
 
 # Move generated reports to Obsidian Vault
 move-to-obsidian:
-    mv ourport-images-* ~/Documents/Obsidian\ Vault
+    mv ourport-images-* ~/Documents/Obsidian\ Vault/ourport
 
 # Generate all reports and move them to Obsidian Vault
 generate-and-move: generate-all move-to-obsidian
