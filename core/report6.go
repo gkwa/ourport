@@ -8,6 +8,9 @@ import (
 	"path"
 	"sort"
 	"text/template"
+
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 //go:embed templates
@@ -30,9 +33,10 @@ func RunReport6(groupsPerPage int) error {
 	}
 
 	type GroupInfo struct {
-		Name  string
-		Count int
-		URLs  []string
+		Name     string
+		Count    int
+		URLs     []string
+		GroupNum int
 	}
 
 	var groupList []GroupInfo
@@ -54,10 +58,9 @@ func RunReport6(groupsPerPage int) error {
 		return fmt.Errorf("failed to read template: %w", err)
 	}
 
+	p := message.NewPrinter(language.English)
 	funcMap := template.FuncMap{
-		"add": func(a, b, c int) int {
-			return a + b + c
-		},
+		"formatNumber": p.Sprintf,
 	}
 
 	tmpl, err := template.New("page").Funcs(funcMap).Parse(string(tmplContent))
@@ -72,7 +75,13 @@ func RunReport6(groupsPerPage int) error {
 			end = totalGroups
 		}
 
-		fileName := fmt.Sprintf("ourport-images-%02d-%03d.md", groupsPerPage, i/groupsPerPage+1)
+		pageGroups := make([]GroupInfo, end-i)
+		for j := range pageGroups {
+			pageGroups[j] = groupList[i+j]
+			pageGroups[j].GroupNum = i + j + 1
+		}
+
+		fileName := fmt.Sprintf("ourport-images-%03d-%03d.md", groupsPerPage, i/groupsPerPage+1)
 		file, err := os.Create(fileName)
 		if err != nil {
 			return err
@@ -80,15 +89,13 @@ func RunReport6(groupsPerPage int) error {
 		defer file.Close()
 
 		err = tmpl.Execute(file, struct {
-			Groups        []GroupInfo
-			GroupsInFile  int
-			TotalGroups   int
-			StartingIndex int
+			Groups       []GroupInfo
+			GroupsInFile int
+			TotalGroups  int
 		}{
-			Groups:        groupList[i:end],
-			GroupsInFile:  end - i,
-			TotalGroups:   totalGroups,
-			StartingIndex: i,
+			Groups:       pageGroups,
+			GroupsInFile: end - i,
+			TotalGroups:  totalGroups,
 		})
 		if err != nil {
 			return err

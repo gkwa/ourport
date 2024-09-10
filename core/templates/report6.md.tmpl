@@ -2,10 +2,10 @@
 visibility: private
 ---
 
-Groups in this file: {{ .GroupsInFile }} (Total groups: {{ .TotalGroups }})
+Groups in this file: {{ formatNumber "%d" .GroupsInFile }} (Total groups: {{ formatNumber "%d" .TotalGroups }})
 
-{{ range $index, $group := .Groups }}
-## Group {{ add $index $.StartingIndex 1 }}: {{ .Name }} ({{ .Count }} images)
+{{ range $group := .Groups }}
+## Group {{ formatNumber "%d" .GroupNum }}: {{ .Name }} ({{ formatNumber "%d" .Count }} images)
 
 {{ range .URLs }}
 ![]({{ . }})
