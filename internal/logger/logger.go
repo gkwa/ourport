@@ -16,6 +16,10 @@ import (
 )
 
 func NewConsoleLogger(verbose, jsonFormat bool) logr.Logger {
+	return NewConsoleLoggerWithWriter(os.Stderr, verbose, jsonFormat)
+}
+
+func NewConsoleLoggerWithWriter(writer io.Writer, verbose, jsonFormat bool) logr.Logger {
 	var zlog zerolog.Logger
 
 	zerolog.CallerMarshalFunc = func(pc uintptr, file string, line int) string {
@@ -27,19 +31,17 @@ func NewConsoleLogger(verbose, jsonFormat bool) logr.Logger {
 	}
 
 	if jsonFormat {
-		zlog = zerolog.New(os.Stderr).With().Timestamp().Caller().Logger()
+		zlog = zerolog.New(writer).With().Timestamp().Caller().Logger()
 	} else {
 		color.NoColor = !verbose
 		consoleWriter := zerolog.ConsoleWriter{
-			Out:        os.Stderr,
+			Out:        writer,
 			NoColor:    !verbose,
 			TimeFormat: time.Kitchen,
 		}
-
 		if !verbose {
 			consoleWriter.PartsExclude = []string{zerolog.TimestampFieldName}
 		}
-
 		zlog = zerolog.New(consoleWriter).With().Timestamp().Caller().Logger()
 	}
 
@@ -50,11 +52,8 @@ func NewConsoleLogger(verbose, jsonFormat bool) logr.Logger {
 	}
 
 	gcrLog.Warn.SetOutput(io.Discard)
-
 	zerologr.VerbosityFieldName = "v"
 	log := zerologr.New(&zlog)
-
 	runtimeLog.SetLogger(log)
-
 	return log
 }

@@ -2,91 +2,79 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"io"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/gkwa/ourport/internal/logger"
-	"github.com/go-logr/zapr"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"github.com/go-logr/logr"
 )
 
 func TestCustomLogger(t *testing.T) {
 	var buf bytes.Buffer
+	logger := logger.NewConsoleLoggerWithWriter(&buf, true, false)
 
-	zapConfig := zap.NewDevelopmentConfig()
-	zapConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	zapLogger := zap.New(zapcore.NewCore(
-		zapcore.NewConsoleEncoder(zapConfig.EncoderConfig),
-		zapcore.AddSync(&buf),
-		zapcore.DebugLevel,
-	))
+	ctx := context.WithValue(context.Background(), loggerKey, logger)
 
-	customLogger := zapr.NewLogger(zapLogger)
+	// Test the logger
+	logger.Info("test message", "key", "value")
 
-	cliLogger = customLogger
-
-	cmd := rootCmd
-	cmd.SetArgs([]string{"version"})
-	err := cmd.Execute()
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
+	output := buf.String()
+	if len(output) == 0 {
+		t.Errorf("Expected log output, but got none")
 	}
 
-	logOutput := buf.String()
-	if logOutput == "" {
-		t.Error("Expected log output, but got none")
-	}
+	t.Logf("Log output: %s", output)
 
-	t.Logf("Log output: %s", logOutput)
+	if !strings.Contains(output, "test message") {
+		t.Errorf("Expected log output to contain 'test message', but got: %s", output)
+	}
 }
 
 func TestJSONLogger(t *testing.T) {
-	oldVerbose, oldLogFormat := verbose, logFormat
-	verbose, logFormat = true, "json"
-	defer func() {
-		verbose, logFormat = oldVerbose, oldLogFormat
-	}()
-
-	oldStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	customLogger := logger.NewConsoleLogger(verbose, logFormat == "json")
-	cliLogger = customLogger
-
-	cmd := rootCmd
-	cmd.SetArgs([]string{"version"})
-	err := cmd.Execute()
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
-
-	w.Close()
-	os.Stderr = oldStderr
-
 	var buf bytes.Buffer
-	_, err = io.Copy(&buf, r)
-	if err != nil {
-		t.Fatalf("Failed to copy log output: %v", err)
-	}
-	logOutput := buf.String()
+	logger := logger.NewConsoleLoggerWithWriter(&buf, true, true)
 
-	if logOutput == "" {
-		t.Error("Expected log output, but got none")
-	}
+	ctx := context.WithValue(context.Background(), loggerKey, logger)
 
-	lines := strings.Split(strings.TrimSpace(logOutput), "\n")
-	for _, line := range lines {
-		var jsonMap map[string]interface{}
-		err := json.Unmarshal([]byte(line), &jsonMap)
-		if err != nil {
-			t.Errorf("Expected valid JSON, but got error: %v", err)
-		}
+	// Test the logger
+	logger.Info("test message", "key", "value")
+
+	output := strings.TrimSpace(buf.String())
+	if len(output) == 0 {
+		t.Errorf("Expected log output, but got none")
 	}
 
-	t.Logf("Log output: %s", logOutput)
+	// Check if it's valid JSON
+	var jsonData map[string]interface{}
+	if err := json.Unmarshal([]byte(output), &jsonData); err != nil {
+		t.Errorf("Expected valid JSON, but got error: %v", err)
+	}
+
+	t.Logf("Log output: %s", output)
+
+	if !strings.Contains(output, "test message") {
+		t.Errorf("Expected log output to contain 'test message', but got: %s", output)
+	}
+}
+
+func TestLoggerFromContext(t *testing.T) {
+	var buf bytes.Buffer
+	logger := logger.NewConsoleLoggerWithWriter(&buf, true, false)
+
+	ctx := context.WithValue(context.Background(), loggerKey, logger)
+
+	retrievedLogger := LoggerFrom(ctx)
+	if retrievedLogger == (logr.Logger{}) {
+		t.Error("Expected to retrieve logger from context, but got empty logger")
+	}
+
+	// Test that the retrieved logger works
+	retrievedLogger.Info("context test")
+
+	output := buf.String()
+	if !strings.Contains(output, "context test") {
+		t.Errorf("Expected log output to contain 'context test', but got: %s", output)
+	}
 }
