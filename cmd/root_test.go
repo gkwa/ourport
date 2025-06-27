@@ -13,12 +13,10 @@ import (
 
 func TestCustomLogger(t *testing.T) {
 	var buf bytes.Buffer
-	logger := logger.NewConsoleLoggerWithWriter(&buf, true, false)
-
-	ctx := context.WithValue(context.Background(), loggerKey, logger)
+	testLogger := logger.NewConsoleLoggerWithWriter(&buf, true, false)
 
 	// Test the logger
-	logger.Info("test message", "key", "value")
+	testLogger.Info("test message", "key", "value")
 
 	output := buf.String()
 	if len(output) == 0 {
@@ -34,12 +32,10 @@ func TestCustomLogger(t *testing.T) {
 
 func TestJSONLogger(t *testing.T) {
 	var buf bytes.Buffer
-	logger := logger.NewConsoleLoggerWithWriter(&buf, true, true)
-
-	ctx := context.WithValue(context.Background(), loggerKey, logger)
+	testLogger := logger.NewConsoleLoggerWithWriter(&buf, true, true)
 
 	// Test the logger
-	logger.Info("test message", "key", "value")
+	testLogger.Info("test message", "key", "value")
 
 	output := strings.TrimSpace(buf.String())
 	if len(output) == 0 {
@@ -61,9 +57,9 @@ func TestJSONLogger(t *testing.T) {
 
 func TestLoggerFromContext(t *testing.T) {
 	var buf bytes.Buffer
-	logger := logger.NewConsoleLoggerWithWriter(&buf, true, false)
+	testLogger := logger.NewConsoleLoggerWithWriter(&buf, true, false)
 
-	ctx := context.WithValue(context.Background(), loggerKey, logger)
+	ctx := context.WithValue(context.Background(), loggerKey, testLogger)
 
 	retrievedLogger := LoggerFrom(ctx)
 	if retrievedLogger == (logr.Logger{}) {
@@ -77,4 +73,15 @@ func TestLoggerFromContext(t *testing.T) {
 	if !strings.Contains(output, "context test") {
 		t.Errorf("Expected log output to contain 'context test', but got: %s", output)
 	}
+}
+
+func TestLoggerFromContextEmpty(t *testing.T) {
+	ctx := context.Background()
+
+	retrievedLogger := LoggerFrom(ctx)
+
+	// Should return a discard logger, not panic
+	retrievedLogger.Info("this should not appear anywhere")
+
+	// If we get here without panicking, the test passes
 }
